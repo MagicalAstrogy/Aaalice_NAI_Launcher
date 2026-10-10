@@ -89,6 +89,7 @@ extension ProviderProtocolLabel on ProviderProtocol {
 enum ProviderPreset {
   openaiChat,
   openaiResponses,
+  codexOAuth,
   openaiCompatibleChat,
   openaiCompatibleResponses,
   anthropic,
@@ -120,6 +121,8 @@ extension ProviderPresetDefaults on ProviderPreset {
         return 'OpenAI Chat Completions';
       case ProviderPreset.openaiResponses:
         return 'OpenAI Responses';
+      case ProviderPreset.codexOAuth:
+        return 'Codex / ChatGPT OAuth';
       case ProviderPreset.openaiCompatibleChat:
         return 'Custom OpenAI-compatible (Chat)';
       case ProviderPreset.openaiCompatibleResponses:
@@ -173,6 +176,8 @@ extension ProviderPresetDefaults on ProviderPreset {
         return 'openai_chat';
       case ProviderPreset.openaiResponses:
         return 'openai_responses';
+      case ProviderPreset.codexOAuth:
+        return 'codex_oauth';
       case ProviderPreset.openaiCompatibleChat:
         return 'openai_compatible_chat';
       case ProviderPreset.openaiCompatibleResponses:
@@ -226,6 +231,8 @@ extension ProviderPresetDefaults on ProviderPreset {
         return 'OpenAI Chat';
       case ProviderPreset.openaiResponses:
         return 'OpenAI Responses';
+      case ProviderPreset.codexOAuth:
+        return 'Codex / ChatGPT OAuth';
       case ProviderPreset.openaiCompatibleChat:
         return 'Custom OpenAI-compatible Chat';
       case ProviderPreset.openaiCompatibleResponses:
@@ -277,6 +284,7 @@ extension ProviderPresetDefaults on ProviderPreset {
     switch (this) {
       case ProviderPreset.openaiChat:
       case ProviderPreset.openaiResponses:
+      case ProviderPreset.codexOAuth:
         return 'https://api.openai.com/v1';
       case ProviderPreset.openaiCompatibleChat:
       case ProviderPreset.openaiCompatibleResponses:
@@ -342,6 +350,7 @@ extension ProviderPresetDefaults on ProviderPreset {
       case ProviderPreset.pollinations:
         return ProviderProtocol.openaiChatCompletions;
       case ProviderPreset.openaiResponses:
+      case ProviderPreset.codexOAuth:
       case ProviderPreset.openaiCompatibleResponses:
       case ProviderPreset.xai:
       case ProviderPreset.lmStudioResponses:
@@ -396,6 +405,7 @@ extension ProviderPresetDefaults on ProviderPreset {
       case ProviderPreset.pollinations:
         return const ['openai-large'];
       case ProviderPreset.openaiCompatibleChat:
+      case ProviderPreset.codexOAuth:
       case ProviderPreset.openaiCompatibleResponses:
       case ProviderPreset.lmStudioChat:
       case ProviderPreset.lmStudioResponses:
@@ -406,6 +416,7 @@ extension ProviderPresetDefaults on ProviderPreset {
 
   bool get requiresApiKey {
     switch (this) {
+      case ProviderPreset.codexOAuth:
       case ProviderPreset.lmStudioChat:
       case ProviderPreset.lmStudioResponses:
       case ProviderPreset.ollama:
@@ -439,6 +450,7 @@ extension ProviderPresetDefaults on ProviderPreset {
     switch (this) {
       case ProviderPreset.openaiChat:
       case ProviderPreset.openaiResponses:
+      case ProviderPreset.codexOAuth:
       case ProviderPreset.openaiCompatibleChat:
       case ProviderPreset.openaiCompatibleResponses:
       case ProviderPreset.anthropic:
@@ -490,6 +502,7 @@ extension ProviderPresetDefaults on ProviderPreset {
         return ProviderType.ollama;
       case ProviderPreset.openaiChat:
       case ProviderPreset.openaiResponses:
+      case ProviderPreset.codexOAuth:
       case ProviderPreset.openaiCompatibleChat:
       case ProviderPreset.openaiCompatibleResponses:
       case ProviderPreset.anthropic:

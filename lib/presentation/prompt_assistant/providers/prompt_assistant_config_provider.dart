@@ -1,9 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/storage_keys.dart';
+import '../../../core/codex_oauth/codex_oauth_providers.dart';
 import '../../../core/storage/local_storage_service.dart';
 import '../../../core/storage/secure_storage_service.dart';
 import '../../../data/models/prompt_assistant/prompt_assistant_models.dart';
+import 'provider_remote_model_names_provider.dart';
 
 final promptAssistantConfigProvider =
     StateNotifierProvider<
@@ -19,6 +21,10 @@ class PromptAssistantConfigNotifier
   }
 
   final Ref _ref;
+  final Map<String, int> _providerMutations = {};
+
+  int _beginProviderMutation(String id) =>
+      _providerMutations[id] = (_providerMutations[id] ?? 0) + 1;
 
   LocalStorageService get _local => _ref.read(localStorageServiceProvider);
   SecureStorageService get _secure => _ref.read(secureStorageServiceProvider);
@@ -37,6 +43,7 @@ class PromptAssistantConfigNotifier
 
     final keyMap = <String, bool>{};
     for (final provider in state.providers) {
+      if (provider.preset == ProviderPreset.codexOAuth) continue;
       final key = await _secure.getPromptAssistantApiKey(provider.id);
       keyMap[provider.id] = key != null && key.isNotEmpty;
     }
@@ -51,12 +58,27 @@ class PromptAssistantConfigNotifier
   }
 
   Future<String?> getProviderApiKey(String providerId) async {
+    if (state.providers.any(
+      (provider) =>
+          provider.id == providerId &&
+          provider.preset == ProviderPreset.codexOAuth,
+    )) {
+      return null;
+    }
     return _secure.getPromptAssistantApiKey(providerId);
   }
 
   /// 服务商已删除时忽略：页内编辑可能在删除之后才提交，不能留下孤立密钥。
   Future<void> setProviderApiKey(String providerId, String apiKey) async {
     if (!state.providers.any((provider) => provider.id == providerId)) return;
+    if (state.providers.any(
+      (provider) =>
+          provider.id == providerId &&
+          provider.preset == ProviderPreset.codexOAuth,
+    )) {
+      await _secure.deletePromptAssistantApiKey(providerId);
+      return;
+    }
     final trimmed = apiKey.trim();
     if (trimmed.isEmpty) {
       await _secure.deletePromptAssistantApiKey(providerId);
@@ -96,6 +118,24 @@ class PromptAssistantConfigNotifier
   }
 
   Future<void> upsertProvider(ProviderConfig provider) async {
+    final mutation = _beginProviderMutation(provider.id);
+    final existing = state.providers
+        .where((item) => item.id == provider.id)
+        .firstOrNull;
+    if (existing?.preset == ProviderPreset.codexOAuth &&
+        provider.preset != ProviderPreset.codexOAuth) {
+      await _ref
+          .read(codexOAuthServiceProvider)
+          .deleteRegistration(provider.id);
+    }
+    if (provider.preset == ProviderPreset.codexOAuth) {
+      provider = provider.copyWith(
+        protocol: ProviderProtocol.openaiResponses,
+        baseUrl: ProviderPreset.codexOAuth.defaultBaseUrl,
+      );
+      await _secure.deletePromptAssistantApiKey(provider.id);
+    }
+    if (!mounted || _providerMutations[provider.id] != mutation) return;
     final providers = [...state.providers];
     final idx = providers.indexWhere((p) => p.id == provider.id);
     if (idx >= 0) {
@@ -113,11 +153,21 @@ class PromptAssistantConfigNotifier
     if (index < 0) return;
     final trimmed = baseUrl.trim();
     final provider = state.providers[index];
+    if (provider.preset == ProviderPreset.codexOAuth) return;
     if (provider.baseUrl == trimmed) return;
     await upsertProvider(provider.copyWith(baseUrl: trimmed));
   }
 
   Future<void> deleteProvider(String providerId) async {
+    final mutation = _beginProviderMutation(providerId);
+    if (state.providers.any(
+      (provider) =>
+          provider.id == providerId &&
+          provider.preset == ProviderPreset.codexOAuth,
+    )) {
+      await _ref.read(codexOAuthServiceProvider).deleteRegistration(providerId);
+    }
+    if (!mounted || _providerMutations[providerId] != mutation) return;
     final providers = state.providers.where((p) => p.id != providerId).toList();
     final models = state.models
         .where((m) => m.providerId != providerId)
@@ -208,6 +258,8 @@ class PromptAssistantConfigNotifier
         if (raw.trim().isNotEmpty && existing.add(raw.trim())) raw.trim(),
     ];
     if (added.isEmpty) return;
+    final remoteNames =
+        _ref.read(providerRemoteModelNamesProvider)[providerId] ?? const {};
 
     final models = [
       for (final model in state.models)
@@ -217,7 +269,9 @@ class PromptAssistantConfigNotifier
           ModelConfig(
             providerId: providerId,
             name: name,
-            displayName: name,
+            displayName: source == ModelSource.api
+                ? remoteNames[name] ?? name
+                : name,
             forTask: task,
             source: source,
           ),

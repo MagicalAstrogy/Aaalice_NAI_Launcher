@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../../core/codex_oauth/codex_oauth_service.dart';
 import '../../../../../core/utils/localization_extension.dart';
 import '../../../../../data/models/prompt_assistant/prompt_assistant_models.dart';
 import '../../../../adaptive/adaptive_presenter.dart';
@@ -8,6 +9,7 @@ import '../../../../prompt_assistant/providers/prompt_assistant_config_provider.
 import '../../../../prompt_assistant/providers/provider_remote_models_provider.dart';
 import '../../../../widgets/common/themed_confirm_dialog.dart';
 import '../../widgets/prompt_assistant_settings_forms.dart';
+import 'codex_oauth_error_labels.dart';
 
 /// 新建或编辑服务商，返回保存后的服务商 ID；取消时为 null。
 Future<String?> showProviderEditor(
@@ -27,9 +29,12 @@ Future<String?> showProviderEditor(
           scrollController: scrollController,
         ),
       );
-  if (result == null) return null;
+  if (result == null || !context.mounted) return null;
 
   final notifier = ref.read(promptAssistantConfigProvider.notifier);
+  final remote = ref.read(providerRemoteModelsProvider.notifier);
+  final messenger = ScaffoldMessenger.maybeOf(context);
+  final l10n = context.l10n;
   final state = ref.read(promptAssistantConfigProvider);
   final name = result.name.isEmpty ? result.preset.defaultName : result.name;
   final id =
@@ -50,8 +55,21 @@ Future<String?> showProviderEditor(
     concurrency: result.concurrency,
   );
 
-  await notifier.upsertProvider(next);
-  if (result.apiKey.trim().isNotEmpty) {
+  try {
+    await notifier.upsertProvider(next);
+  } on CodexOAuthException catch (error) {
+    if (error.code == 'revocation_unconfirmed') remote.forget(id);
+    if (context.mounted) {
+      messenger?.showSnackBar(
+        SnackBar(content: Text(codexOAuthErrorLabel(l10n, error.code))),
+      );
+    }
+    return null;
+  }
+  if (result.preset == ProviderPreset.codexOAuth ||
+      provider?.preset == ProviderPreset.codexOAuth) {
+    await notifier.setProviderApiKey(id, '');
+  } else if (result.apiKey.trim().isNotEmpty) {
     await notifier.setProviderApiKey(id, result.apiKey);
   }
   if (provider == null) {
@@ -61,7 +79,7 @@ Future<String?> showProviderEditor(
       source: ModelSource.manual,
     );
   } else if (provider.baseUrl != next.baseUrl) {
-    ref.read(providerRemoteModelsProvider.notifier).forget(id);
+    remote.forget(id);
   }
   return id;
 }
@@ -75,11 +93,24 @@ Future<bool> confirmDeleteProvider(
     context: context,
     itemName: provider.name,
   );
-  if (!confirmed) return false;
-  await ref
-      .read(promptAssistantConfigProvider.notifier)
-      .deleteProvider(provider.id);
-  ref.read(providerRemoteModelsProvider.notifier).forget(provider.id);
+  if (!confirmed || !context.mounted) return false;
+  final remote = ref.read(providerRemoteModelsProvider.notifier);
+  final l10n = context.l10n;
+  final messenger = ScaffoldMessenger.maybeOf(context);
+  try {
+    await ref
+        .read(promptAssistantConfigProvider.notifier)
+        .deleteProvider(provider.id);
+  } on CodexOAuthException catch (error) {
+    if (error.code == 'revocation_unconfirmed') remote.forget(provider.id);
+    if (context.mounted) {
+      messenger?.showSnackBar(
+        SnackBar(content: Text(codexOAuthErrorLabel(l10n, error.code))),
+      );
+    }
+    return false;
+  }
+  remote.forget(provider.id);
   return true;
 }
 

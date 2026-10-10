@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../../core/agent/agent.dart';
+import '../../../core/codex_oauth/codex_oauth_providers.dart';
 import '../../../core/agent/context_usage.dart';
 import '../../../core/agent/audit/jsonl_audit_sink.dart';
 import '../../../core/agent/harness/compaction/compaction.dart';
@@ -288,7 +289,13 @@ class AgentChatNotifier extends StateNotifier<AgentChatState> {
       await _loadSkillsFromDisk();
     }
 
-    _client = AgentApiClient(_ref.read(promptAssistantDioProvider));
+    _client = AgentApiClient(
+      _ref.read(promptAssistantDioProvider),
+      codexAccessToken: _ref.read(codexOAuthServiceProvider).getAccessToken,
+      codexRegisterRequest: _ref
+          .read(codexOAuthServiceProvider)
+          .registerRequest,
+    );
     _runtimeReady = true;
     _refreshRoute();
     await _sessionController.restoreLastSession();
@@ -415,7 +422,9 @@ class AgentChatNotifier extends StateNotifier<AgentChatState> {
 
   Future<Directory?> _resolveCurrentImageProjectDirectory() {
     final resolver = _imageProjectDirectoryResolver;
-    return resolver != null ? resolver() : resolveCurrentImageProjectDirectory();
+    return resolver != null
+        ? resolver()
+        : resolveCurrentImageProjectDirectory();
   }
 
   Future<int> reloadSkills() async {

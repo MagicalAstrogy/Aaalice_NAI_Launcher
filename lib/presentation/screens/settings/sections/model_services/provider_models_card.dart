@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../../core/codex_oauth/codex_oauth_service.dart';
 import '../../../../../core/utils/localization_extension.dart';
 import '../../../../../data/models/prompt_assistant/prompt_assistant_models.dart';
 import '../../../../prompt_assistant/models/assistant_model_capability.dart';
 import '../../../../prompt_assistant/providers/prompt_assistant_config_provider.dart';
 import '../../../../prompt_assistant/providers/provider_remote_models_provider.dart';
 import '../../widgets/settings_card.dart';
+import 'codex_oauth_error_labels.dart';
 import 'model_capability_tags.dart';
 import 'model_family_group.dart';
 import 'provider_model_actions.dart';
@@ -62,15 +64,29 @@ class _ManageModelsButton extends ConsumerStatefulWidget {
 
 class _ManageModelsButtonState extends ConsumerState<_ManageModelsButton> {
   var _loading = false;
+  var _generation = 0;
+
+  @override
+  void didUpdateWidget(covariant _ManageModelsButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.provider.id != widget.provider.id ||
+        oldWidget.provider.preset != widget.provider.preset) {
+      _generation++;
+      _loading = false;
+    }
+  }
 
   Future<void> _open() async {
+    if (_loading) return;
+    final generation = ++_generation;
+    final provider = widget.provider;
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.maybeOf(context);
     final remote = ref.read(providerRemoteModelsProvider.notifier);
     setState(() => _loading = true);
     try {
-      final models = await remote.fetch(widget.provider.id);
-      if (!mounted) return;
+      final models = await remote.fetch(provider.id);
+      if (!mounted || generation != _generation) return;
       if (models.isEmpty) {
         messenger?.showSnackBar(
           SnackBar(content: Text(l10n.promptAssistant_emptyModelList)),
@@ -78,15 +94,25 @@ class _ManageModelsButtonState extends ConsumerState<_ManageModelsButton> {
         return;
       }
       setState(() => _loading = false);
-      await showProviderModelManagePanel(context, widget.provider);
+      await showProviderModelManagePanel(context, provider);
     } catch (error) {
+      if (!mounted || generation != _generation) return;
       messenger?.showSnackBar(
         SnackBar(
-          content: Text(l10n.promptAssistant_pullModelsFailed('$error')),
+          content: Text(
+            provider.preset == ProviderPreset.codexOAuth
+                ? codexOAuthErrorLabel(
+                    l10n,
+                    error is CodexOAuthException ? error.code : 'generic',
+                  )
+                : l10n.promptAssistant_pullModelsFailed('$error'),
+          ),
         ),
       );
     } finally {
-      if (mounted && _loading) setState(() => _loading = false);
+      if (mounted && generation == _generation && _loading) {
+        setState(() => _loading = false);
+      }
     }
   }
 

@@ -8,6 +8,7 @@ import '../../../data/models/prompt_assistant/prompt_assistant_models.dart';
 import 'assistant_cancellation.dart';
 import 'assistant_request_scheduler.dart';
 import 'provider_adapters/anthropic_messages_adapter.dart';
+import 'provider_adapters/codex_oauth_adapter.dart';
 import 'provider_adapters/gemini_generate_content_adapter.dart';
 import 'provider_adapters/openai_chat_completions_adapter.dart';
 import 'provider_adapters/openai_responses_adapter.dart';
@@ -17,10 +18,17 @@ class PromptAssistantApiClient {
   PromptAssistantApiClient({
     required Dio dio,
     this.imageUploadMaxBytes = promptAssistantImageUploadMaxBytes,
+    this.codexAccessToken,
+    this.codexRegisterRequest,
+    this.onCodexModelCatalog,
   }) : _dio = dio;
 
   final Dio _dio;
   final int imageUploadMaxBytes;
+  final Future<String> Function(String providerId)? codexAccessToken;
+  final CodexRequestRegistrar? codexRegisterRequest;
+  final void Function(String providerId, Map<String, String> names)?
+  onCodexModelCatalog;
   final Map<String, Set<CancelToken>> _cancelTokens = {};
   final scheduler = AssistantRequestScheduler();
 
@@ -118,6 +126,15 @@ class PromptAssistantApiClient {
   }
 
   PromptAssistantProviderAdapter _adapterFor(ProviderConfig provider) {
+    if (provider.preset == ProviderPreset.codexOAuth) {
+      return CodexOAuthAdapter(
+        getAccessToken:
+            codexAccessToken ??
+            (_) async => throw StateError('Sign in with ChatGPT first.'),
+        onModelCatalog: onCodexModelCatalog,
+        registerRequest: codexRegisterRequest,
+      );
+    }
     switch (provider.protocol) {
       case ProviderProtocol.openaiChatCompletions:
         return const OpenAiChatCompletionsAdapter();

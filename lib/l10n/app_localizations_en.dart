@@ -7285,6 +7285,85 @@ class AppLocalizationsEn extends AppLocalizations {
   String get modelServices_baseUrl => 'API address';
 
   @override
+  String get modelServices_codexTitle => 'ChatGPT OAuth (Codex)';
+
+  @override
+  String get modelServices_codexDescription =>
+      'Preview channel for Prompt Assistant and Agent Responses using the ChatGPT plan usage you authorize. Available models and features depend on OpenAI and your account. NovelAI image generation is unchanged.';
+
+  @override
+  String get modelServices_codexSaveThenSignIn =>
+      'Save this provider, then choose Sign in with ChatGPT in its connection card. This preview uses a fixed OpenAI endpoint and needs no API key. It does not import an existing Codex CLI login.';
+
+  @override
+  String get modelServices_codexPrivacy =>
+      'Sign-in opens your system browser. Credentials stay in this device’s secure storage, outside cloud sync. This channel does not fall back to API-key billing.';
+
+  @override
+  String get modelServices_codexAuthorizePlan => 'Authorize ChatGPT plan usage';
+
+  @override
+  String get modelServices_codexNeedsPlanAuthorization =>
+      'ChatGPT plan access needs authorization';
+
+  @override
+  String get modelServices_codexSignIn => 'Sign in with ChatGPT';
+
+  @override
+  String get modelServices_codexSigningIn => 'Waiting for ChatGPT sign-in…';
+
+  @override
+  String get modelServices_codexSignedIn => 'Signed in with ChatGPT';
+
+  @override
+  String get modelServices_codexSignedOut => 'Not signed in';
+
+  @override
+  String get modelServices_codexRestoring => 'Checking saved sign-in…';
+
+  @override
+  String get modelServices_codexRefreshing => 'Refreshing sign-in…';
+
+  @override
+  String get modelServices_codexSignOut => 'Sign out';
+
+  @override
+  String get modelServices_codexConnectionOk =>
+      'Connected to the authorized OpenAI model service.';
+
+  @override
+  String get modelServices_codexErrorTimeout =>
+      'Sign-in timed out. Select Sign in with ChatGPT to try again.';
+
+  @override
+  String get modelServices_codexErrorBrowser =>
+      'Could not open a supported system browser. Check your default browser and try again.';
+
+  @override
+  String get modelServices_codexErrorDenied =>
+      'Authorization was declined or required access was not granted. You can sign in again.';
+
+  @override
+  String get modelServices_codexErrorSignIn =>
+      'This session has expired or is unavailable. Sign in with ChatGPT again.';
+
+  @override
+  String get modelServices_codexErrorStorage =>
+      'Could not access this device’s secure credential storage. Check system permissions and try again.';
+
+  @override
+  String get modelServices_codexErrorRevocation =>
+      'Signed out locally, but remote revocation could not be confirmed. You can remove the app’s access in ChatGPT settings.';
+
+  @override
+  String get modelServices_codexErrorNetwork =>
+      'Could not reach OpenAI. Check your network and try again.';
+
+  @override
+  String get modelServices_codexErrorGeneric =>
+      'The connection could not be verified. Try again, or sign out and sign in again.';
+
+  @override
   String get modelServices_checkConnection => 'Check connection';
 
   @override

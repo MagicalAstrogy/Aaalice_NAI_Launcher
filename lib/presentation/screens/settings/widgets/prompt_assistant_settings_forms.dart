@@ -97,6 +97,14 @@ class _PromptAssistantProviderFormState
     final currentBaseUrl = _baseController.text.trim();
     _preset = value;
     _allowImageInput = value.defaultAllowImageInput;
+    // OAuth has a fixed destination and must never inherit an API key or relay.
+    final changesOAuth =
+        value == ProviderPreset.codexOAuth ||
+        previousPreset == ProviderPreset.codexOAuth;
+    if (changesOAuth) {
+      _baseController.text = value.defaultBaseUrl;
+      _keyController.clear();
+    }
     if (widget.provider == null) {
       _nameController.text = value.defaultName;
       _baseController.text = value.defaultBaseUrl;
@@ -105,7 +113,8 @@ class _PromptAssistantProviderFormState
     if (currentName.isEmpty || currentName == previousPreset.defaultName) {
       _nameController.text = value.defaultName;
     }
-    if (currentBaseUrl.isEmpty ||
+    if (changesOAuth ||
+        currentBaseUrl.isEmpty ||
         currentBaseUrl == previousPreset.defaultBaseUrl) {
       _baseController.text = value.defaultBaseUrl;
     }
@@ -122,8 +131,10 @@ class _PromptAssistantProviderFormState
       context,
       PromptAssistantProviderFormResult(
         name: _nameController.text.trim(),
-        baseUrl: _baseController.text.trim(),
-        apiKey: _keyController.text,
+        baseUrl: _preset == ProviderPreset.codexOAuth
+            ? _preset.defaultBaseUrl
+            : _baseController.text.trim(),
+        apiKey: _preset == ProviderPreset.codexOAuth ? '' : _keyController.text,
         preset: _preset,
         allowImageInput: _allowImageInput,
         concurrency: AssistantConcurrencySettings(
@@ -148,8 +159,10 @@ class _PromptAssistantProviderFormState
         ),
         const SizedBox(height: 12),
         DropdownButtonFormField<ProviderPreset>(
+          key: const ValueKey('prompt-assistant-provider-preset'),
           initialValue: _preset,
           isExpanded: true,
+          itemHeight: null,
           items: ProviderPreset.values
               .map(
                 (value) => DropdownMenuItem(
@@ -168,9 +181,16 @@ class _PromptAssistantProviderFormState
           ),
         ),
         // 已有服务商的地址和密钥在模型服务页内直接编辑，这里不再重复。
-        if (widget.provider == null) ...[
+        if (_preset == ProviderPreset.codexOAuth) ...[
+          const SizedBox(height: 12),
+          Text(
+            context.l10n.modelServices_codexSaveThenSignIn,
+            key: const ValueKey('codex-oauth-save-then-sign-in'),
+          ),
+        ] else if (widget.provider == null) ...[
           const SizedBox(height: 12),
           TextField(
+            key: const ValueKey('prompt-assistant-provider-base-url'),
             controller: _baseController,
             keyboardType: TextInputType.url,
             decoration: const InputDecoration(labelText: 'Base URL'),
@@ -234,9 +254,11 @@ class _PromptAssistantProviderFormState
             context.l10n.promptAssistant_concurrencyAutoDescription,
             style: Theme.of(context).textTheme.bodySmall,
           ),
-        if (widget.provider == null) ...[
+        if (widget.provider == null &&
+            _preset != ProviderPreset.codexOAuth) ...[
           const SizedBox(height: 12),
           TextField(
+            key: const ValueKey('prompt-assistant-provider-api-key'),
             controller: _keyController,
             decoration: InputDecoration(
               labelText: context.l10n.promptAssistant_apiKeyLeaveEmpty,

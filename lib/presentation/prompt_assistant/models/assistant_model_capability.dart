@@ -217,8 +217,10 @@ class AssistantModelCatalog {
         'deepseek-chat' => _legacyDeepSeekChat,
         'deepseek-reasoner' => _legacyDeepSeekReasoner,
         // 官方已下线这两个名字但仍接受请求，实际由 deepseek-flash 提供服务。
-        'deepseek-v4-flash' ||
-        'deepseek-v4-flash-vision-exp' => _lookupRule('deepseek', 'deepseek-flash'),
+        'deepseek-v4-flash' || 'deepseek-v4-flash-vision-exp' => _lookupRule(
+          'deepseek',
+          'deepseek-flash',
+        ),
         _ => null,
       };
     }
@@ -361,6 +363,7 @@ class AssistantModelCatalog {
   static String? _resolvePiProvider(ProviderConfig provider, String model) {
     switch (provider.preset) {
       case ProviderPreset.openaiResponses:
+      case ProviderPreset.codexOAuth:
         return 'openai';
       case ProviderPreset.anthropic:
         return 'anthropic';

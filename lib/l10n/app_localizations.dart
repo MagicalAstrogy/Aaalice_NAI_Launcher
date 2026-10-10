@@ -12901,6 +12901,138 @@ abstract class AppLocalizations {
   /// **'API address'**
   String get modelServices_baseUrl;
 
+  /// No description provided for @modelServices_codexTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'ChatGPT OAuth (Codex)'**
+  String get modelServices_codexTitle;
+
+  /// No description provided for @modelServices_codexDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview channel for Prompt Assistant and Agent Responses using the ChatGPT plan usage you authorize. Available models and features depend on OpenAI and your account. NovelAI image generation is unchanged.'**
+  String get modelServices_codexDescription;
+
+  /// No description provided for @modelServices_codexSaveThenSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Save this provider, then choose Sign in with ChatGPT in its connection card. This preview uses a fixed OpenAI endpoint and needs no API key. It does not import an existing Codex CLI login.'**
+  String get modelServices_codexSaveThenSignIn;
+
+  /// No description provided for @modelServices_codexPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in opens your system browser. Credentials stay in this device’s secure storage, outside cloud sync. This channel does not fall back to API-key billing.'**
+  String get modelServices_codexPrivacy;
+
+  /// No description provided for @modelServices_codexAuthorizePlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Authorize ChatGPT plan usage'**
+  String get modelServices_codexAuthorizePlan;
+
+  /// No description provided for @modelServices_codexNeedsPlanAuthorization.
+  ///
+  /// In en, this message translates to:
+  /// **'ChatGPT plan access needs authorization'**
+  String get modelServices_codexNeedsPlanAuthorization;
+
+  /// No description provided for @modelServices_codexSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with ChatGPT'**
+  String get modelServices_codexSignIn;
+
+  /// No description provided for @modelServices_codexSigningIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for ChatGPT sign-in…'**
+  String get modelServices_codexSigningIn;
+
+  /// No description provided for @modelServices_codexSignedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in with ChatGPT'**
+  String get modelServices_codexSignedIn;
+
+  /// No description provided for @modelServices_codexSignedOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Not signed in'**
+  String get modelServices_codexSignedOut;
+
+  /// No description provided for @modelServices_codexRestoring.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking saved sign-in…'**
+  String get modelServices_codexRestoring;
+
+  /// No description provided for @modelServices_codexRefreshing.
+  ///
+  /// In en, this message translates to:
+  /// **'Refreshing sign-in…'**
+  String get modelServices_codexRefreshing;
+
+  /// No description provided for @modelServices_codexSignOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get modelServices_codexSignOut;
+
+  /// No description provided for @modelServices_codexConnectionOk.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected to the authorized OpenAI model service.'**
+  String get modelServices_codexConnectionOk;
+
+  /// No description provided for @modelServices_codexErrorTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in timed out. Select Sign in with ChatGPT to try again.'**
+  String get modelServices_codexErrorTimeout;
+
+  /// No description provided for @modelServices_codexErrorBrowser.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open a supported system browser. Check your default browser and try again.'**
+  String get modelServices_codexErrorBrowser;
+
+  /// No description provided for @modelServices_codexErrorDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Authorization was declined or required access was not granted. You can sign in again.'**
+  String get modelServices_codexErrorDenied;
+
+  /// No description provided for @modelServices_codexErrorSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'This session has expired or is unavailable. Sign in with ChatGPT again.'**
+  String get modelServices_codexErrorSignIn;
+
+  /// No description provided for @modelServices_codexErrorStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not access this device’s secure credential storage. Check system permissions and try again.'**
+  String get modelServices_codexErrorStorage;
+
+  /// No description provided for @modelServices_codexErrorRevocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed out locally, but remote revocation could not be confirmed. You can remove the app’s access in ChatGPT settings.'**
+  String get modelServices_codexErrorRevocation;
+
+  /// No description provided for @modelServices_codexErrorNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach OpenAI. Check your network and try again.'**
+  String get modelServices_codexErrorNetwork;
+
+  /// No description provided for @modelServices_codexErrorGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'The connection could not be verified. Try again, or sign out and sign in again.'**
+  String get modelServices_codexErrorGeneric;
+
   /// No description provided for @modelServices_checkConnection.
   ///
   /// In en, this message translates to:

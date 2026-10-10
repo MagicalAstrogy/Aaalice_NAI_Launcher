@@ -1,13 +1,20 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:nai_launcher/core/codex_oauth/codex_oauth_providers.dart';
+import 'package:nai_launcher/core/codex_oauth/codex_oauth_service.dart';
 import 'package:nai_launcher/core/constants/storage_keys.dart';
 import 'package:nai_launcher/core/storage/local_storage_service.dart';
 import 'package:nai_launcher/core/storage/secure_storage_service.dart';
 import 'package:nai_launcher/data/models/prompt_assistant/prompt_assistant_models.dart';
 import 'package:nai_launcher/presentation/prompt_assistant/providers/prompt_assistant_config_provider.dart';
+import 'package:nai_launcher/presentation/prompt_assistant/providers/provider_remote_model_names_provider.dart';
 
 class _MockLocalStorageService extends Mock implements LocalStorageService {}
+
+class _MockOAuthService extends Mock implements CodexOAuthService {}
 
 class _MemorySecureStorage extends SecureStorageService {
   final keys = <String, String>{};
@@ -42,6 +49,7 @@ void main() {
   late ProviderContainer container;
   late _MemorySecureStorage secure;
   late PromptAssistantConfigNotifier notifier;
+  late _MockOAuthService oauth;
 
   PromptAssistantConfigState read() =>
       container.read(promptAssistantConfigProvider);
@@ -75,10 +83,14 @@ void main() {
       ),
     ).thenAnswer((_) async {});
     secure = _MemorySecureStorage();
+    oauth = _MockOAuthService();
+    when(() => oauth.logout(any())).thenAnswer((_) async {});
+    when(() => oauth.deleteRegistration(any())).thenAnswer((_) async {});
     container = ProviderContainer(
       overrides: [
         localStorageServiceProvider.overrideWithValue(local),
         secureStorageServiceProvider.overrideWithValue(secure),
+        codexOAuthServiceProvider.overrideWithValue(oauth),
       ],
     );
     notifier = container.read(promptAssistantConfigProvider.notifier);
@@ -87,6 +99,119 @@ void main() {
   });
 
   tearDown(() => container.dispose());
+
+  test(
+    'OAuth channel fixes destination and never returns a saved API key',
+    () async {
+      secure.keys['oauth'] = 'old-key';
+      await notifier.upsertProvider(
+        ProviderPreset.codexOAuth
+            .createConfig(id: 'oauth')
+            .copyWith(
+              baseUrl: 'https://untrusted.invalid',
+              protocol: ProviderProtocol.openaiChatCompletions,
+            ),
+      );
+      await notifier.setProviderApiKey('oauth', 'new-key');
+      await notifier.setProviderBaseUrl('oauth', 'https://untrusted.invalid');
+      final provider = read().providers.singleWhere((p) => p.id == 'oauth');
+      expect(provider.baseUrl, 'https://api.openai.com/v1');
+      expect(provider.protocol, ProviderProtocol.openaiResponses);
+      expect(await notifier.getProviderApiKey('oauth'), isNull);
+      expect(secure.keys['oauth'], isNull);
+    },
+  );
+
+  test('leaving or deleting OAuth channel clears its session', () async {
+    await notifier.upsertProvider(
+      ProviderPreset.codexOAuth.createConfig(id: 'oauth'),
+    );
+    await notifier.upsertProvider(
+      ProviderPreset.openaiResponses.createConfig(id: 'oauth'),
+    );
+    verify(() => oauth.deleteRegistration('oauth')).called(1);
+    await notifier.upsertProvider(
+      ProviderPreset.codexOAuth.createConfig(id: 'oauth'),
+    );
+    await notifier.deleteProvider('oauth');
+    verify(() => oauth.deleteRegistration('oauth')).called(1);
+    expect(read().providers.any((p) => p.id == 'oauth'), isFalse);
+  });
+
+  test(
+    'a superseded account deletion never removes the relogged provider',
+    () async {
+      await notifier.upsertProvider(
+        ProviderPreset.codexOAuth.createConfig(id: 'oauth'),
+      );
+      await notifier.addProviderModels('oauth', [
+        'account-model',
+      ], source: ModelSource.api);
+      final revokeGate = Completer<void>();
+      when(() => oauth.deleteRegistration('oauth')).thenAnswer((_) async {
+        await revokeGate.future;
+        // The auth service reports a generation change if login superseded the
+        // deletion while old remote revocation was pending.
+        throw const CodexOAuthException('cancelled', 'Sign-in was cancelled.');
+      });
+      when(() => oauth.login(providerId: 'oauth')).thenAnswer((_) async {
+        return const CodexOAuthStatus(
+          providerId: 'oauth',
+          phase: CodexOAuthPhase.signedIn,
+        );
+      });
+      final deletion = notifier.deleteProvider('oauth');
+      final failed = expectLater(deletion, throwsA(isA<CodexOAuthException>()));
+      await oauth.login(providerId: 'oauth');
+      revokeGate.complete();
+      await failed;
+      expect(read().providers.any((p) => p.id == 'oauth'), isTrue);
+      expect(copies('oauth', 'account-model'), isNotEmpty);
+    },
+  );
+
+  test(
+    'a superseded account removal never changes the provider preset',
+    () async {
+      await notifier.upsertProvider(
+        ProviderPreset.codexOAuth.createConfig(id: 'oauth'),
+      );
+      final revokeGate = Completer<void>();
+      when(() => oauth.deleteRegistration('oauth')).thenAnswer((_) async {
+        await revokeGate.future;
+        throw const CodexOAuthException('cancelled', 'Sign-in was cancelled.');
+      });
+      final conversion = notifier.upsertProvider(
+        ProviderPreset.openaiResponses.createConfig(id: 'oauth'),
+      );
+      final failed = expectLater(
+        conversion,
+        throwsA(isA<CodexOAuthException>()),
+      );
+      revokeGate.complete();
+      await failed;
+      expect(
+        read().providers.singleWhere((p) => p.id == 'oauth').preset,
+        ProviderPreset.codexOAuth,
+      );
+    },
+  );
+
+  test('account catalog labels are preserved when adding models', () async {
+    container.read(providerRemoteModelNamesProvider.notifier).state = {
+      'relay': {'model-id': 'Server Display Name'},
+    };
+    await notifier.addProviderModels('relay', [
+      'model-id',
+    ], source: ModelSource.api);
+    expect(
+      copies(
+        'relay',
+        'model-id',
+      ).every((model) => model.displayName == 'Server Display Name'),
+      isTrue,
+    );
+  });
 
   group('addProviderModels', () {
     test('stores one copy per task and skips models already present', () async {

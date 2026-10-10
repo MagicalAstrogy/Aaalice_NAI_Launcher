@@ -50,16 +50,18 @@ Future<void> _openModelForm(BuildContext context) =>
       ),
     );
 
-Future<void> _openProviderForm(BuildContext context, ProviderConfig? provider) =>
-    AdaptivePresenter.showForm<PromptAssistantProviderFormResult>(
-      context: context,
-      dialogWidth: 520,
-      title: '服务商',
-      builder: (context, scrollController) => PromptAssistantProviderForm(
-        provider: provider,
-        scrollController: scrollController,
-      ),
-    );
+Future<void> _openProviderForm(
+  BuildContext context,
+  ProviderConfig? provider,
+) => AdaptivePresenter.showForm<PromptAssistantProviderFormResult>(
+  context: context,
+  dialogWidth: 520,
+  title: '服务商',
+  builder: (context, scrollController) => PromptAssistantProviderForm(
+    provider: provider,
+    scrollController: scrollController,
+  ),
+);
 
 void main() {
   testWidgets('模型表单在桌面按内容高度呈现', (tester) async {
@@ -166,4 +168,110 @@ void main() {
     expect(find.text('API Key (留空不改)'), findsOneWidget);
     expect(find.byType(TextField), findsNWidgets(3));
   });
+
+  testWidgets(
+    'Codex OAuth hides credentials and clears relay values on preset changes',
+    (tester) async {
+      PromptAssistantProviderFormResult? result;
+      await tester.pumpWidget(
+        _launcher(
+          open: (context) async {
+            result =
+                await AdaptivePresenter.showForm<
+                  PromptAssistantProviderFormResult
+                >(
+                  context: context,
+                  title: '服务商',
+                  builder: (context, scrollController) =>
+                      PromptAssistantProviderForm(
+                        scrollController: scrollController,
+                      ),
+                );
+          },
+        ),
+      );
+      await tester.tap(find.text('打开'));
+      await tester.pumpAndSettle();
+      final preset = find.byKey(
+        const ValueKey('prompt-assistant-provider-preset'),
+      );
+      final baseUrl = find.byKey(
+        const ValueKey('prompt-assistant-provider-base-url'),
+      );
+      final apiKey = find.byKey(
+        const ValueKey('prompt-assistant-provider-api-key'),
+      );
+      await tester.enterText(baseUrl, 'https://custom-relay.invalid/v1');
+      await tester.enterText(apiKey, 'old-provider-api-key');
+      tester.widget<DropdownButtonFormField<ProviderPreset>>(preset).onChanged!(
+        ProviderPreset.codexOAuth,
+      );
+      await tester.pumpAndSettle();
+      expect(baseUrl, findsNothing);
+      expect(apiKey, findsNothing);
+      expect(
+        find.byKey(const ValueKey('codex-oauth-save-then-sign-in')),
+        findsOneWidget,
+      );
+
+      tester.widget<DropdownButtonFormField<ProviderPreset>>(preset).onChanged!(
+        ProviderPreset.openaiChat,
+      );
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<TextField>(baseUrl).controller!.text,
+        ProviderPreset.openaiChat.defaultBaseUrl,
+      );
+      expect(tester.widget<TextField>(apiKey).controller!.text, isEmpty);
+
+      tester.widget<DropdownButtonFormField<ProviderPreset>>(preset).onChanged!(
+        ProviderPreset.codexOAuth,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('保存'));
+      await tester.pumpAndSettle();
+      expect(result?.preset, ProviderPreset.codexOAuth);
+      expect(result?.baseUrl, ProviderPreset.codexOAuth.defaultBaseUrl);
+      expect(result?.apiKey, isEmpty);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  for (final width in [320.0, 600.0, 840.0, 1180.0, 1600.0]) {
+    testWidgets(
+      'Codex provider form at $width and 3x keeps save/cancel accessible',
+      (tester) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = Size(width, 1000);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        addTearDown(tester.view.resetPhysicalSize);
+        await tester.pumpWidget(
+          _launcher(
+            textScale: 3,
+            open: (context) => _openProviderForm(
+              context,
+              ProviderPreset.codexOAuth.createConfig(),
+            ),
+          ),
+        );
+        await tester.tap(find.text('打开'));
+        await tester.pumpAndSettle();
+        expect(
+          find.byKey(const ValueKey('codex-oauth-save-then-sign-in')),
+          findsOneWidget,
+        );
+        expect(find.text('Base URL'), findsNothing);
+        expect(
+          find.byKey(const ValueKey('prompt-assistant-provider-api-key')),
+          findsNothing,
+        );
+        expect(tester.takeException(), isNull);
+        await tester.ensureVisible(find.text('取消'));
+        await tester.tap(find.text('取消'));
+        await tester.pumpAndSettle();
+        expect(find.byType(PromptAssistantProviderForm), findsNothing);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
 }

@@ -6,6 +6,7 @@ import '../../../../../data/models/prompt_assistant/prompt_assistant_models.dart
 import '../../../../adaptive/adaptive_presenter.dart';
 import '../../../../prompt_assistant/models/assistant_model_capability.dart';
 import '../../../../prompt_assistant/providers/prompt_assistant_config_provider.dart';
+import '../../../../prompt_assistant/providers/provider_remote_model_names_provider.dart';
 import '../../../../prompt_assistant/providers/provider_remote_models_provider.dart';
 import '../../../../widgets/common/searchable_model_picker.dart';
 import 'model_family_group.dart';
@@ -48,7 +49,9 @@ class ProviderModelManagePanel extends ConsumerWidget {
     final remote = ref.watch(providerRemoteModelsProvider)[providerId] ?? [];
     final models = providerModels(config, providerId);
     final added = {for (final model in models) model.name};
-    final entries = _entries(provider, remote);
+    final remoteNames =
+        ref.watch(providerRemoteModelNamesProvider)[providerId] ?? const {};
+    final entries = _entries(provider, remote, remoteNames);
     final missing = [
       for (final entry in entries)
         if (!added.contains(entry.id)) entry.id,
@@ -100,25 +103,33 @@ class ProviderModelManagePanel extends ConsumerWidget {
     );
   }
 
-  List<_RemoteEntry> _entries(ProviderConfig provider, List<String> remote) =>
-      [
-        for (final id in remote)
-          (
-            id: id,
-            group: modelFamilyGroup(id),
-            title:
-                AssistantModelCatalog.catalogDisplayName(
-                  provider: provider,
-                  model: id,
-                ) ??
-                id,
-          ),
-      ]..sort((a, b) {
-        final byGroup = a.group.compareTo(b.group);
-        return byGroup != 0
-            ? byGroup
-            : a.title.toLowerCase().compareTo(b.title.toLowerCase());
-      });
+  List<_RemoteEntry> _entries(
+    ProviderConfig provider,
+    List<String> remote,
+    Map<String, String> remoteNames,
+  ) {
+    final entries = [
+      for (final id in remote)
+        (
+          id: id,
+          group: modelFamilyGroup(id),
+          title:
+              remoteNames[id] ??
+              AssistantModelCatalog.catalogDisplayName(
+                provider: provider,
+                model: id,
+              ) ??
+              id,
+        ),
+    ];
+    if (provider.preset == ProviderPreset.codexOAuth) return entries;
+    return entries..sort((a, b) {
+      final byGroup = a.group.compareTo(b.group);
+      return byGroup != 0
+          ? byGroup
+          : a.title.toLowerCase().compareTo(b.title.toLowerCase());
+    });
+  }
 
   List<ModelPickerOption<String>> _options(
     BuildContext context,
@@ -156,7 +167,9 @@ class ProviderModelManagePanel extends ConsumerWidget {
           subtitle: entry.title == entry.id ? null : entry.id,
           modelId: entry.id,
           searchTerms: [entry.id],
-          group: groups[entry.group],
+          group: provider.preset == ProviderPreset.codexOAuth
+              ? null
+              : groups[entry.group],
           trailing: Icon(
             added.contains(entry.id)
                 ? Icons.check_circle_rounded

@@ -38,7 +38,7 @@ class OpenAiResponsesAdapter extends PromptAssistantProviderAdapter {
     }
 
     final response = await dio.post<dynamic>(
-      _resolveEndpoint(request.provider),
+      resolveEndpoint(request.provider),
       data: {
         'model': request.model,
         'stream': false,
@@ -90,7 +90,7 @@ class OpenAiResponsesAdapter extends PromptAssistantProviderAdapter {
         if (json == null) {
           return;
         }
-        switch (event) {
+        switch (event.isEmpty ? json['type'] : event) {
           case 'response.output_text.delta':
             final delta = json['delta'];
             if (delta is String && delta.isNotEmpty) {
@@ -237,8 +237,12 @@ class OpenAiResponsesAdapter extends PromptAssistantProviderAdapter {
             final message =
                 errorBody?['message'] as String? ??
                 'LLM stream failed with event $event';
+            final code = errorBody?['code'];
             pending.add(
-              AgentWireError('LLM service returned an error: $message'),
+              AgentWireError(
+                'LLM service returned an error: '
+                '${code is String ? '$code: ' : ''}$message',
+              ),
             );
           default:
             break;
@@ -249,10 +253,11 @@ class OpenAiResponsesAdapter extends PromptAssistantProviderAdapter {
     try {
       final stream = agentStreamPost(
         dio,
-        endpoint: _resolveEndpoint(request.provider),
-        payload: _buildAgentPayload(request),
-        headers: _agentHeaders(request.apiKey),
+        endpoint: resolveEndpoint(request.provider),
+        payload: buildAgentPayload(request),
+        headers: await agentHeaders(request.provider, request.apiKey),
         cancelToken: cancelToken,
+        followRedirects: followRedirects,
       );
       await for (final chunk in stream) {
         parser.push(chunk);
@@ -286,7 +291,7 @@ class OpenAiResponsesAdapter extends PromptAssistantProviderAdapter {
     yield AgentWireFinish(stopReason: stopReason, usage: usage);
   }
 
-  Map<String, dynamic> _buildAgentPayload(AgentChatRequest request) {
+  Map<String, dynamic> buildAgentPayload(AgentChatRequest request) {
     final input = <Map<String, dynamic>>[];
     for (final message in request.messages) {
       if (message is UserMessage) {
@@ -412,7 +417,12 @@ class OpenAiResponsesAdapter extends PromptAssistantProviderAdapter {
     return 'data:$mimeType;base64,$data';
   }
 
-  Map<String, dynamic> _agentHeaders(String? apiKey) {
+  bool get followRedirects => true;
+
+  Future<Map<String, dynamic>> agentHeaders(
+    ProviderConfig provider,
+    String? apiKey,
+  ) async {
     return {
       'Content-Type': 'application/json',
       if (apiKey != null && apiKey.trim().isNotEmpty)
@@ -436,7 +446,7 @@ class OpenAiResponsesAdapter extends PromptAssistantProviderAdapter {
     ];
   }
 
-  String _resolveEndpoint(ProviderConfig provider) {
+  String resolveEndpoint(ProviderConfig provider) {
     final base = normalizedBaseUrl(provider.baseUrl);
     if (base.endsWith('/responses')) {
       return base;

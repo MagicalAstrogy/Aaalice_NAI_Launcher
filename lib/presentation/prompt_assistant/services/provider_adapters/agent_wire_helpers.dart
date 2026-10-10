@@ -163,6 +163,7 @@ Stream<Uint8List> agentStreamPost(
   required Map<String, dynamic> headers,
   required CancelToken cancelToken,
   Duration? receiveTimeout = const Duration(minutes: 5),
+  bool followRedirects = true,
 }) async* {
   var receivedBytes = false;
   for (var attempt = 0; ; attempt++) {
@@ -175,6 +176,7 @@ Stream<Uint8List> agentStreamPost(
         headers: headers,
         cancelToken: cancelToken,
         receiveTimeout: receiveTimeout,
+        followRedirects: followRedirects,
       )) {
         if (chunk.isNotEmpty) receivedBytes = true;
         yield chunk;
@@ -237,6 +239,7 @@ Stream<Uint8List> _agentStreamPostOnce(
   required Map<String, dynamic> headers,
   required CancelToken cancelToken,
   required Duration? receiveTimeout,
+  required bool followRedirects,
 }) async* {
   late final Response<ResponseBody> response;
   try {
@@ -248,6 +251,7 @@ Stream<Uint8List> _agentStreamPostOnce(
         responseType: ResponseType.stream,
         sendTimeout: const Duration(seconds: 30),
         receiveTimeout: receiveTimeout,
+        followRedirects: followRedirects,
       ),
       cancelToken: cancelToken,
     );

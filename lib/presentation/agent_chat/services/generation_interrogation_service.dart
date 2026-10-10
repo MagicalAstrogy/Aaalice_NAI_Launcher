@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../core/agent/agent_types.dart';
+import '../../../core/codex_oauth/codex_oauth_providers.dart';
 import '../../../core/utils/app_logger.dart';
 import '../../../data/models/agent/agent_settings.dart';
 import '../../agent_settings/providers/agent_settings_provider.dart';
@@ -247,6 +250,10 @@ class GenerationInterrogationService {
   }) async {
     final apiClient = PromptAssistantApiClient(
       dio: _ref.read(promptAssistantDioProvider),
+      codexAccessToken: _ref.read(codexOAuthServiceProvider).getAccessToken,
+      codexRegisterRequest: _ref
+          .read(codexOAuthServiceProvider)
+          .registerRequest,
     );
     const sessionId = 'agent_interrogate';
     void cancel(String? _) =>

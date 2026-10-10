@@ -7105,6 +7105,84 @@ class AppLocalizationsJa extends AppLocalizations {
   String get modelServices_baseUrl => 'API アドレス';
 
   @override
+  String get modelServices_codexTitle => 'ChatGPT OAuth（Codex）';
+
+  @override
+  String get modelServices_codexDescription =>
+      '許可した ChatGPT プランの利用枠を使う、プロンプトアシスタントとエージェントの Responses 向けプレビューチャネルです。利用できるモデルと機能は OpenAI とアカウントの権限により異なります。NovelAI の画像生成は変わりません。';
+
+  @override
+  String get modelServices_codexSaveThenSignIn =>
+      'プロバイダーを保存してから、接続カードの「ChatGPT でログイン」を選んでください。固定の OpenAI エンドポイントを使用し、API キーは不要です。既存の Codex CLI のログイン情報は読み込みません。';
+
+  @override
+  String get modelServices_codexPrivacy =>
+      'ログインはシステムブラウザーで開きます。認証情報はこの端末の安全なストレージにのみ保存され、クラウド同期されません。API キー課金へのフォールバックは行いません。';
+
+  @override
+  String get modelServices_codexAuthorizePlan => 'ChatGPT プラン利用枠を許可';
+
+  @override
+  String get modelServices_codexNeedsPlanAuthorization =>
+      'ChatGPT プランの利用許可が必要です';
+
+  @override
+  String get modelServices_codexSignIn => 'ChatGPT でログイン';
+
+  @override
+  String get modelServices_codexSigningIn => 'ChatGPT へのログインを待っています…';
+
+  @override
+  String get modelServices_codexSignedIn => 'ChatGPT にログイン済み';
+
+  @override
+  String get modelServices_codexSignedOut => '未ログイン';
+
+  @override
+  String get modelServices_codexRestoring => '保存されたログイン状態を確認中…';
+
+  @override
+  String get modelServices_codexRefreshing => 'ログイン状態を更新中…';
+
+  @override
+  String get modelServices_codexSignOut => 'ログアウト';
+
+  @override
+  String get modelServices_codexConnectionOk => '許可された OpenAI モデルサービスに接続しました。';
+
+  @override
+  String get modelServices_codexErrorTimeout =>
+      'ログインがタイムアウトしました。「ChatGPT でログイン」で再試行してください。';
+
+  @override
+  String get modelServices_codexErrorBrowser =>
+      '対応するシステムブラウザーを開けませんでした。既定のブラウザーを確認して再試行してください。';
+
+  @override
+  String get modelServices_codexErrorDenied =>
+      '認証が拒否されたか、必要な権限が許可されませんでした。再度ログインできます。';
+
+  @override
+  String get modelServices_codexErrorSignIn =>
+      'セッションが失効したか利用できません。ChatGPT に再度ログインしてください。';
+
+  @override
+  String get modelServices_codexErrorStorage =>
+      'この端末の安全な認証情報ストレージにアクセスできません。システムの権限を確認して再試行してください。';
+
+  @override
+  String get modelServices_codexErrorRevocation =>
+      'この端末ではログアウトしましたが、サーバー側の認証取り消しは確認できませんでした。ChatGPT の設定でアプリへのアクセスを削除できます。';
+
+  @override
+  String get modelServices_codexErrorNetwork =>
+      'OpenAI に接続できませんでした。ネットワークを確認して再試行してください。';
+
+  @override
+  String get modelServices_codexErrorGeneric =>
+      '接続を確認できませんでした。再試行するか、ログアウトして再度ログインしてください。';
+
+  @override
   String get modelServices_checkConnection => '接続を確認';
 
   @override

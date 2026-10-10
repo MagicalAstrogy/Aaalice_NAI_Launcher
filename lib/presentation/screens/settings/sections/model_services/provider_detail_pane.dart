@@ -6,6 +6,7 @@ import '../../../../../data/models/prompt_assistant/prompt_assistant_models.dart
 import '../../../../prompt_assistant/providers/prompt_assistant_config_provider.dart';
 import '../../../../widgets/common/heading_semantics.dart';
 import '../../../../widgets/common/provider_icon.dart';
+import 'codex_oauth_connection_card.dart';
 import 'provider_connection_card.dart';
 import 'provider_editing.dart';
 import 'provider_models_card.dart';
@@ -24,7 +25,10 @@ class ProviderDetailPane extends StatelessWidget {
       children: [
         _ProviderDetailHeader(provider: provider, onDeleted: onDeleted),
         const SizedBox(height: 12),
-        ProviderConnectionCard(provider: provider),
+        if (provider.preset == ProviderPreset.codexOAuth)
+          CodexOAuthConnectionCard(provider: provider)
+        else
+          ProviderConnectionCard(provider: provider),
         const SizedBox(height: 16),
         ProviderModelsCard(provider: provider),
       ],

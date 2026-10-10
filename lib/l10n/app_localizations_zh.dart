@@ -6979,6 +6979,76 @@ class AppLocalizationsZh extends AppLocalizations {
   String get modelServices_baseUrl => 'API 地址';
 
   @override
+  String get modelServices_codexTitle => 'ChatGPT OAuth（Codex）';
+
+  @override
+  String get modelServices_codexDescription =>
+      '用于提示词助手和智能体 Responses 的预览渠道，消耗你授权的 ChatGPT 计划额度。可用模型和功能由 OpenAI 与账号权限决定，不改变 NovelAI 图片生成。';
+
+  @override
+  String get modelServices_codexSaveThenSignIn =>
+      '保存服务商后，在连接卡片点击「使用 ChatGPT 登录」。此预览渠道使用固定的 OpenAI 地址，无需 API Key，也不会导入现有 Codex CLI 登录。';
+
+  @override
+  String get modelServices_codexPrivacy =>
+      '登录将在系统浏览器中打开。凭据仅保存在本机安全存储中，不参与云同步；此渠道不会回退到 API Key 计费。';
+
+  @override
+  String get modelServices_codexAuthorizePlan => '授权 ChatGPT 计划额度';
+
+  @override
+  String get modelServices_codexNeedsPlanAuthorization => '需要授权 ChatGPT 计划额度';
+
+  @override
+  String get modelServices_codexSignIn => '使用 ChatGPT 登录';
+
+  @override
+  String get modelServices_codexSigningIn => '等待 ChatGPT 登录…';
+
+  @override
+  String get modelServices_codexSignedIn => '已使用 ChatGPT 登录';
+
+  @override
+  String get modelServices_codexSignedOut => '尚未登录';
+
+  @override
+  String get modelServices_codexRestoring => '正在检查本机登录状态…';
+
+  @override
+  String get modelServices_codexRefreshing => '正在刷新登录状态…';
+
+  @override
+  String get modelServices_codexSignOut => '退出登录';
+
+  @override
+  String get modelServices_codexConnectionOk => '已连接到授权的 OpenAI 模型服务。';
+
+  @override
+  String get modelServices_codexErrorTimeout => '登录已超时，请点击「使用 ChatGPT 登录」重试。';
+
+  @override
+  String get modelServices_codexErrorBrowser => '无法打开受支持的系统浏览器，请检查默认浏览器后重试。';
+
+  @override
+  String get modelServices_codexErrorDenied => '授权被拒绝或未授予所需权限，你可以重新登录。';
+
+  @override
+  String get modelServices_codexErrorSignIn => '登录已失效或不可用，请重新使用 ChatGPT 登录。';
+
+  @override
+  String get modelServices_codexErrorStorage => '无法访问本机凭据安全存储，请检查系统权限后重试。';
+
+  @override
+  String get modelServices_codexErrorRevocation =>
+      '已在本机退出登录，但无法确认远端授权是否已撤销。你可以在 ChatGPT 设置中移除此应用的访问权限。';
+
+  @override
+  String get modelServices_codexErrorNetwork => '无法连接 OpenAI，请检查网络后重试。';
+
+  @override
+  String get modelServices_codexErrorGeneric => '无法验证连接，请重试，或退出后重新登录。';
+
+  @override
   String get modelServices_checkConnection => '检查连接';
 
   @override
@@ -22249,6 +22319,76 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get modelServices_baseUrl => 'API 位址';
+
+  @override
+  String get modelServices_codexTitle => 'ChatGPT OAuth（Codex）';
+
+  @override
+  String get modelServices_codexDescription =>
+      '用於提示詞助手和智慧體 Responses 的預覽管道，消耗你授權的 ChatGPT 方案額度。可用模型和功能由 OpenAI 與帳號權限決定，不改變 NovelAI 圖片生成。';
+
+  @override
+  String get modelServices_codexSaveThenSignIn =>
+      '儲存服務商後，在連線卡片點選「使用 ChatGPT 登入」。此預覽管道使用固定的 OpenAI 位址，無需 API Key，也不會匯入現有 Codex CLI 登入。';
+
+  @override
+  String get modelServices_codexPrivacy =>
+      '登入將在系統瀏覽器中開啟。憑證僅儲存在本機安全儲存空間，不參與雲端同步；此管道不會回退至 API Key 計費。';
+
+  @override
+  String get modelServices_codexAuthorizePlan => '授權 ChatGPT 方案額度';
+
+  @override
+  String get modelServices_codexNeedsPlanAuthorization => '需要授權 ChatGPT 方案額度';
+
+  @override
+  String get modelServices_codexSignIn => '使用 ChatGPT 登入';
+
+  @override
+  String get modelServices_codexSigningIn => '等待 ChatGPT 登入…';
+
+  @override
+  String get modelServices_codexSignedIn => '已使用 ChatGPT 登入';
+
+  @override
+  String get modelServices_codexSignedOut => '尚未登入';
+
+  @override
+  String get modelServices_codexRestoring => '正在檢查本機登入狀態…';
+
+  @override
+  String get modelServices_codexRefreshing => '正在更新登入狀態…';
+
+  @override
+  String get modelServices_codexSignOut => '登出';
+
+  @override
+  String get modelServices_codexConnectionOk => '已連線至授權的 OpenAI 模型服務。';
+
+  @override
+  String get modelServices_codexErrorTimeout => '登入已逾時，請點選「使用 ChatGPT 登入」重試。';
+
+  @override
+  String get modelServices_codexErrorBrowser => '無法開啟支援的系統瀏覽器，請檢查預設瀏覽器後重試。';
+
+  @override
+  String get modelServices_codexErrorDenied => '授權遭拒或未授予所需權限，你可以重新登入。';
+
+  @override
+  String get modelServices_codexErrorSignIn => '登入已失效或無法使用，請重新使用 ChatGPT 登入。';
+
+  @override
+  String get modelServices_codexErrorStorage => '無法存取本機憑證安全儲存空間，請檢查系統權限後重試。';
+
+  @override
+  String get modelServices_codexErrorRevocation =>
+      '已在本機登出，但無法確認遠端授權是否已撤銷。你可以在 ChatGPT 設定中移除此應用程式的存取權限。';
+
+  @override
+  String get modelServices_codexErrorNetwork => '無法連線至 OpenAI，請檢查網路後重試。';
+
+  @override
+  String get modelServices_codexErrorGeneric => '無法驗證連線，請重試，或登出後重新登入。';
 
   @override
   String get modelServices_checkConnection => '檢查連線';

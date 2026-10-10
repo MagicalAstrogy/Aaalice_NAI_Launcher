@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/autocomplete/local_first_prompt_translation.dart';
 import '../../../core/autocomplete/tag_translation_lookup.dart';
+import '../../../core/codex_oauth/codex_oauth_providers.dart';
 import '../../../core/utils/app_logger.dart';
 import '../../../core/utils/prompt_edit_document.dart';
 import '../../../core/network/proxy_settings_provider.dart';
@@ -14,6 +15,7 @@ import '../../../data/models/prompt_assistant/assistant_execution_settings.dart'
 import '../models/assistant_model_capability.dart';
 import '../../../data/models/prompt_assistant/prompt_assistant_models.dart';
 import '../providers/prompt_assistant_config_provider.dart';
+import '../providers/provider_remote_model_names_provider.dart';
 import 'assistant_cancellation.dart';
 import 'prompt_assistant_api_client.dart';
 import 'provider_adapters/prompt_assistant_adapter.dart';
@@ -36,7 +38,16 @@ final promptAssistantDioProvider = Provider<Dio>((ref) {
 
 final promptAssistantServiceProvider = Provider<PromptAssistantService>((ref) {
   final dio = ref.watch(promptAssistantDioProvider);
-  final client = PromptAssistantApiClient(dio: dio);
+  final client = PromptAssistantApiClient(
+    dio: dio,
+    codexAccessToken: ref.watch(codexOAuthServiceProvider).getAccessToken,
+    codexRegisterRequest: ref.watch(codexOAuthServiceProvider).registerRequest,
+    onCodexModelCatalog: (id, names) {
+      ref
+          .read(providerRemoteModelNamesProvider.notifier)
+          .update((state) => {...state, id: names});
+    },
+  );
   final service = PromptAssistantService(
     ref: ref,
     apiClient: client,

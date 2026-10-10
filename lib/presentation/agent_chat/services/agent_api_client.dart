@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import '../../prompt_assistant/models/agent_protocol.dart';
 import '../../../data/models/prompt_assistant/prompt_assistant_models.dart';
 import '../../prompt_assistant/services/provider_adapters/anthropic_messages_adapter.dart';
+import '../../prompt_assistant/services/provider_adapters/codex_oauth_adapter.dart';
 import '../../prompt_assistant/services/provider_adapters/gemini_generate_content_adapter.dart';
 import '../../prompt_assistant/services/provider_adapters/openai_chat_completions_adapter.dart';
 import '../../prompt_assistant/services/provider_adapters/openai_responses_adapter.dart';
@@ -10,9 +11,11 @@ import '../../prompt_assistant/services/provider_adapters/prompt_assistant_adapt
 
 /// Agent HTTP 请求分发。
 class AgentApiClient {
-  AgentApiClient(this._dio);
+  AgentApiClient(this._dio, {this.codexAccessToken, this.codexRegisterRequest});
 
   final Dio _dio;
+  final Future<String> Function(String providerId)? codexAccessToken;
+  final CodexRequestRegistrar? codexRegisterRequest;
   final Map<String, CancelToken> _cancelTokens = {};
 
   void cancel(String sessionId) {
@@ -21,6 +24,14 @@ class AgentApiClient {
   }
 
   PromptAssistantProviderAdapter _adapterFor(ProviderConfig provider) {
+    if (provider.preset == ProviderPreset.codexOAuth) {
+      return CodexOAuthAdapter(
+        registerRequest: codexRegisterRequest,
+        getAccessToken:
+            codexAccessToken ??
+            (_) async => throw StateError('Sign in with ChatGPT first.'),
+      );
+    }
     switch (provider.protocol) {
       case ProviderProtocol.openaiChatCompletions:
         return const OpenAiChatCompletionsAdapter();
