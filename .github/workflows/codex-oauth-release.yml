@@ -1,0 +1,73 @@
+name: Publish Codex OAuth 4.2.2
+
+# Single-version release gate. Only trusted main pushes whose exact commit has
+# passed all existing validation may publish. No long-lived token is required.
+on:
+  workflow_run:
+    workflows: ["Pull Request Validation"]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-codex-oauth-v4.2.2
+  cancel-in-progress: false
+
+jobs:
+  tag:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    outputs:
+      created: ${{ steps.tag.outputs.created }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 1
+          lfs: false
+      - name: Verify validated commit and create immutable tag
+        id: tag
+        shell: pwsh
+        env:
+          VALIDATED_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          'created=false' >> $env:GITHUB_OUTPUT
+          $head = (git rev-parse HEAD).Trim()
+          if ($head -ne $env:VALIDATED_SHA) { throw 'Checkout differs from validated commit.' }
+          $main = (git ls-remote origin refs/heads/main).Split("`t")[0].Trim()
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot verify current main.' }
+          if ($head -ne $main) { Write-Host 'Main moved; wait for its own validation.'; exit 0 }
+          $version = (Select-String -Path pubspec.yaml -Pattern '^version:\s*(.+)$').Matches[0].Groups[1].Value.Trim()
+          if ($version -ne '4.2.2+45') { Write-Host 'Not the authorized single release version.'; exit 0 }
+          $existing = git ls-remote --tags origin refs/tags/v4.2.2
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot verify release tag absence.' }
+          if ($existing) { Write-Host 'Tag already exists; never overwrite or republish it.'; exit 0 }
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git tag -a v4.2.2 $head -m 'v4.2.2'
+          if ($LASTEXITCODE -ne 0) { throw 'Tag creation failed.' }
+          git push origin refs/tags/v4.2.2
+          if ($LASTEXITCODE -ne 0) { throw 'Tag push failed.' }
+          'created=true' >> $env:GITHUB_OUTPUT
+
+  publish:
+    needs: tag
+    if: needs.tag.outputs.created == 'true'
+    uses: ./.github/workflows/release.yml
+    with:
+      tag: v4.2.2
+    secrets:
+      GOOGLE_DRIVE_WINDOWS_CLIENT_SECRET: ${{ secrets.GOOGLE_DRIVE_WINDOWS_CLIENT_SECRET }}
+      WINDOWS_SIGNING_CERT_BASE64: ${{ secrets.WINDOWS_SIGNING_CERT_BASE64 }}
+      WINDOWS_SIGNING_CERT_PASSWORD: ${{ secrets.WINDOWS_SIGNING_CERT_PASSWORD }}
+      ANDROID_SIGNING_KEYSTORE_BASE64: ${{ secrets.ANDROID_SIGNING_KEYSTORE_BASE64 }}
+      ANDROID_SIGNING_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEYSTORE_PASSWORD }}
+      ANDROID_SIGNING_KEY_ALIAS: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
+      ANDROID_SIGNING_KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}

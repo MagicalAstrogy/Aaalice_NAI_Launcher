@@ -10,6 +10,26 @@ on:
         description: "Release tag to build, for example v1.0.0"
         required: true
         type: string
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+    secrets:
+      GOOGLE_DRIVE_WINDOWS_CLIENT_SECRET:
+        required: false
+      WINDOWS_SIGNING_CERT_BASE64:
+        required: false
+      WINDOWS_SIGNING_CERT_PASSWORD:
+        required: false
+      ANDROID_SIGNING_KEYSTORE_BASE64:
+        required: true
+      ANDROID_SIGNING_KEYSTORE_PASSWORD:
+        required: true
+      ANDROID_SIGNING_KEY_ALIAS:
+        required: true
+      ANDROID_SIGNING_KEY_PASSWORD:
+        required: true
 
 permissions:
   contents: write
@@ -17,7 +37,7 @@ permissions:
 env:
   FLUTTER_VERSION: "3.47.5"
   PUB_HOSTED_URL: "https://pub.dev"
-  RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+  RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
 
 jobs:
   prepare:
